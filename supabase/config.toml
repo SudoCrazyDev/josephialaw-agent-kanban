@@ -1,0 +1,19 @@
+project_id = "agent-kanban"
+
+[db]
+port = 54322
+major_version = 15
+
+[api]
+port = 54321
+# Expose the kanban schema to PostgREST. "public" is kept in the list so
+# Supabase internals that expect it keep working.
+schemas = ["public", "kanban"]
+extra_search_path = ["public", "kanban", "extensions"]
+max_rows = 1000
+
+[studio]
+port = 54323
+
+[realtime]
+enabled = true

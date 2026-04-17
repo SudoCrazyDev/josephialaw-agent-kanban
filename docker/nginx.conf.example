@@ -1,0 +1,41 @@
+# Example nginx site for agent-kanban.
+# Drop into /etc/nginx/sites-available/kanban.divorcewithaplan.com and
+# symlink into /etc/nginx/sites-enabled/. Then:
+#   sudo certbot --nginx -d kanban.divorcewithaplan.com
+# Certbot will rewrite the server block to listen on 443 with auto-renewal.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name kanban.divorcewithaplan.com;
+
+    # certbot will inject the redirect + SSL block here on first run.
+
+    # Long-lived connections: MCP Streamable HTTP + Supabase realtime (SSE).
+    # Default 60s timeouts would cut these off mid-stream.
+    proxy_http_version 1.1;
+    proxy_buffering    off;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+
+    location / {
+        proxy_pass         http://127.0.0.1:3000;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+
+        # WebSocket / SSE upgrade — MCP responses and Supabase realtime both
+        # need these to avoid buffering and premature close.
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+    }
+
+    # Optional: cache Next.js static assets aggressively. They're already
+    # fingerprinted by Next so long cache + immutable is safe.
+    location /_next/static/ {
+        proxy_pass         http://127.0.0.1:3000;
+        proxy_set_header   Host              $host;
+        add_header         Cache-Control     "public, max-age=31536000, immutable";
+    }
+}

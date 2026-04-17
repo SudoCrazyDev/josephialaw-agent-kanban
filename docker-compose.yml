@@ -1,0 +1,19 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: agent-kanban:local
+    restart: unless-stopped
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_KEY: ${SUPABASE_KEY}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      MCP_TOKEN_PEPPER: ${MCP_TOKEN_PEPPER}
+      CRON_SECRET: ${CRON_SECRET}
+      NODE_ENV: production
+    # Bind to loopback only — the host's nginx is the public entrypoint.
+    ports:
+      - "127.0.0.1:3000:3000"
