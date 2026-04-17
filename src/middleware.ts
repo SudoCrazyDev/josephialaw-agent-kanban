@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const url = request.nextUrl.clone();
-  url.pathname = "/login";
+  url.pathname = "/";
   url.searchParams.set("next", pathname);
   return NextResponse.redirect(url);
 }
