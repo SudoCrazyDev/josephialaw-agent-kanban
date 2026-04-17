@@ -1,16 +1,20 @@
 import { Filter, Plus, Search, Users } from "lucide-react";
 import Link from "next/link";
 
+import { UserMenu } from "@/components/auth/user-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { SessionUser } from "@/lib/auth/session-core";
 import type { BoardSnapshot } from "@/lib/types";
 
 export function Topbar({
   snapshot,
-  onNewTask
+  onNewTask,
+  user
 }: {
   snapshot: BoardSnapshot;
   onNewTask?: () => void;
+  user?: SessionUser | null;
 }) {
   const chips = ["All", "Blocked", "High priority", ...Array.from(new Set(snapshot.agents.map((a) => a.role)))];
 
@@ -55,6 +59,7 @@ export function Topbar({
           <Plus />
           <span>New task</span>
         </Button>
+        <UserMenu user={user ?? null} />
       </div>
     </header>
   );

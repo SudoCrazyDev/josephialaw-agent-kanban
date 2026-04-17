@@ -4,6 +4,7 @@ import { AlertTriangle, Archive, KeyRound, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { UserMenu } from "@/components/auth/user-menu";
 import { AgentAvatar } from "@/components/board/agent-avatar";
 import { CapabilityChip } from "@/components/board/capability-chip";
 import { NewAgentModal, type NewAgentResult } from "@/components/agents/new-agent-modal";
@@ -11,16 +12,19 @@ import { TokenRevealModal } from "@/components/agents/token-reveal-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { SessionUser } from "@/lib/auth/session-core";
 import type { Agent, Organization } from "@/lib/types";
 
 export function AgentsClient({
   org,
   initialAgents,
-  backend
+  backend,
+  user
 }: {
   org: Organization;
   initialAgents: Agent[];
   backend: "supabase" | "mock";
+  user?: SessionUser | null;
 }) {
   const [agents, setAgents] = useState<Agent[]>(initialAgents);
   const [modalOpen, setModalOpen] = useState(false);
@@ -65,10 +69,13 @@ export function AgentsClient({
           <span className="text-muted-foreground">/</span>
           <span className="text-sm">Agents</span>
         </div>
-        <Button size="sm" onClick={() => setModalOpen(true)}>
-          <Plus />
-          New agent
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <Plus />
+            New agent
+          </Button>
+          <UserMenu user={user ?? null} />
+        </div>
       </header>
 
       <div className="mx-auto w-full max-w-5xl px-5 py-8">

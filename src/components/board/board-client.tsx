@@ -17,12 +17,19 @@ import { TaskCard } from "@/components/board/task-card";
 import { TaskDrawer } from "@/components/board/task-drawer";
 import { Topbar } from "@/components/board/topbar";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import type { SessionUser } from "@/lib/auth/session-core";
 import type { Agent, BoardSnapshot, Task, TaskEvent } from "@/lib/types";
 
 const PULSE_MS = 1400;
 const LOCAL_ECHO_MS = 2500;
 
-export function BoardClient({ initial }: { initial: BoardSnapshot }) {
+export function BoardClient({
+  initial,
+  user
+}: {
+  initial: BoardSnapshot;
+  user?: SessionUser | null;
+}) {
   const [tasks, setTasks] = useState<Task[]>(initial.tasks);
   const [agents, setAgents] = useState<Agent[]>(initial.agents);
   const [events, setEvents] = useState<TaskEvent[]>(initial.events);
@@ -243,7 +250,7 @@ export function BoardClient({ initial }: { initial: BoardSnapshot }) {
   return (
     <BoardContext.Provider value={ctx}>
       <div className="flex h-screen flex-col bg-background">
-        <Topbar snapshot={ctx.snapshot} onNewTask={() => setNewTaskOpen(true)} />
+        <Topbar snapshot={ctx.snapshot} onNewTask={() => setNewTaskOpen(true)} user={user} />
 
         <LayoutGroup>
           <DndContext

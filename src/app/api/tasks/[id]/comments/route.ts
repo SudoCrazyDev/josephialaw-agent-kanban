@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireUser } from "@/lib/auth/require-user";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -13,6 +14,9 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const u = await requireUser();
+  if (u instanceof Response) return u;
+
   const { id } = await ctx.params;
 
   let parsed;

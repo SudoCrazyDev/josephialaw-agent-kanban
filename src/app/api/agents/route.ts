@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireUser } from "@/lib/auth/require-user";
 import { generateAgentToken } from "@/lib/mcp/auth";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
@@ -18,6 +19,9 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const u = await requireUser();
+  if (u instanceof Response) return u;
+
   let parsed;
   try {
     parsed = bodySchema.safeParse(await req.json());

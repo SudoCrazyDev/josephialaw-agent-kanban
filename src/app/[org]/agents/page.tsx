@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AgentsClient } from "@/components/agents/agents-client";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getMockBoardSnapshot } from "@/lib/mock-data";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import type { Agent, Organization } from "@/lib/types";
@@ -50,13 +51,16 @@ async function fetchFromSupabase(orgSlug: string): Promise<{ org: Organization; 
 export default async function AgentsPage({ params }: Props) {
   const { org: orgSlug } = await params;
 
-  const live = await fetchFromSupabase(orgSlug);
+  const [user, live] = await Promise.all([
+    getCurrentUser(),
+    fetchFromSupabase(orgSlug)
+  ]);
+
   if (live) {
-    return <AgentsClient org={live.org} initialAgents={live.agents} backend="supabase" />;
+    return <AgentsClient org={live.org} initialAgents={live.agents} backend="supabase" user={user} />;
   }
 
-  // Supabase not ready — fall back to the mock snapshot so the UI is inspectable
   const snap = getMockBoardSnapshot(orgSlug, "demo");
   if (!snap) notFound();
-  return <AgentsClient org={snap.org} initialAgents={snap.agents} backend="mock" />;
+  return <AgentsClient org={snap.org} initialAgents={snap.agents} backend="mock" user={user} />;
 }
