@@ -1,9 +1,10 @@
 services:
-  web:
+  kanban:
     build:
       context: .
       dockerfile: docker/Dockerfile
     image: agent-kanban:local
+    container_name: dwap-kanban
     restart: unless-stopped
     environment:
       SUPABASE_URL: ${SUPABASE_URL}
@@ -17,4 +18,4 @@ services:
     # Bind to loopback only — the host's nginx is the public entrypoint.
     # Host port 8001 (8000 is in use on this EC2 box); container listens on 3000.
     ports:
-      - "127.0.0.1:8001:3000"
+      - "8001:3000"
