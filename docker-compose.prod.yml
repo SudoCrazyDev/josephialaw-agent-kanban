@@ -1,12 +1,13 @@
 # Production overlay — apply alongside docker-compose.yml:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 #
-# Swaps the locally-built image for the one pushed to ECR by the deploy
-# workflow (.github/workflows/deploy.yml). `build` is inherited from the base
-# compose file but isn't executed in prod because we always pass --no-build.
+# Must share the service name (`kanban`) with the base compose file so the
+# merge replaces the image instead of creating a parallel service.
+# The deploy workflow always passes --no-build, so the `build:` block
+# inherited from the base file is never executed in prod.
 
 services:
-  web:
+  kanban:
     image: 406751652854.dkr.ecr.us-east-1.amazonaws.com/dwap/kanban:latest
     restart: always
     pull_policy: always
