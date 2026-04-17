@@ -16,7 +16,7 @@
  │   ┌─────────────────────┐   docker-compose                       │
  │   │  host nginx         │   ┌──────────────────────────────┐    │
  │   │  + certbot (TLS)    │──▶│  web (Next.js 15)             │    │
- │   │  listens :80 :443   │   │  listens 127.0.0.1:3000       │    │
+ │   │  listens :80 :443   │   │  host :8001 → container :3000 │    │
  │   └─────────────────────┘   │  ┌────────────┐ ┌──────────┐  │    │
  │                             │  │  /app      │ │ /api/mcp │  │    │
  │                             │  │  Board UI  │ │  server  │  │    │
@@ -47,7 +47,7 @@
 
 ### Host nginx + certbot
 - Already installed on the EC2 box — terminates TLS for `kanban.divorcewithaplan.com`
-- Reverse-proxies to the Next.js container on `127.0.0.1:3000`
+- Reverse-proxies to the Next.js container on `127.0.0.1:8001`
 - Must be configured for long-lived connections: `proxy_http_version 1.1`, `proxy_buffering off`, `proxy_read_timeout 3600s`, and the WebSocket `Upgrade` + `Connection` headers — MCP Streamable HTTP and Supabase realtime both stream responses and default nginx timeouts would cut them off
 - Cert renewal handled by certbot's existing timer — no app-level config needed
 

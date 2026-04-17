@@ -15,5 +15,6 @@ services:
       CRON_SECRET: ${CRON_SECRET}
       NODE_ENV: production
     # Bind to loopback only — the host's nginx is the public entrypoint.
+    # Host port 8001 (8000 is in use on this EC2 box); container listens on 3000.
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:8001:3000"

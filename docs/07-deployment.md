@@ -4,7 +4,7 @@
 - **Host**: user-owned EC2 instance
 - **Domain**: `kanban.divorcewithaplan.com`
 - **Reverse proxy**: the EC2 host's existing **nginx + certbot** (not in Docker)
-- **App**: single Docker Compose service (`web`) bound to `127.0.0.1:3000`
+- **App**: single Docker Compose service (`web`) — container listens on `3000`, mapped to host `127.0.0.1:8001` (port `8000` on this box is already taken)
 - **DB**: Supabase Cloud (not in docker-compose)
 
 ## Why no Caddy
@@ -30,7 +30,7 @@ services:
       CRON_SECRET: ${CRON_SECRET}
       NODE_ENV: production
     ports:
-      - "127.0.0.1:3000:3000"  # loopback only — host nginx is the entrypoint
+      - "127.0.0.1:8001:3000"  # loopback only — host nginx is the entrypoint (host :8001 → container :3000)
 ```
 
 ## nginx site
