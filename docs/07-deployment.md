@@ -90,44 +90,41 @@ From then on: nginx terminates TLS, proxies to the container on `127.0.0.1:3000`
 
 ## CI/CD (GitHub Actions)
 
+Workflow: [.github/workflows/deploy.yml](../.github/workflows/deploy.yml). On every push to `main`:
+
+1. **build-and-push** — checkout → AWS creds → ECR login → buildx → push image to `406751652854.dkr.ecr.us-east-1.amazonaws.com/dwap/kanban` with two tags (`latest` and the 7-char commit SHA). GitHub Actions cache speeds up subsequent builds.
+2. **deploy** — writes `.env.production` from the `ENV_CONTENTS` secret, grabs a fresh 12h ECR login password, scp's `.env.production` + both compose files to EC2, SSHs in and runs `docker login` → `docker compose pull` → `docker compose up -d --no-build --remove-orphans` → `docker image prune -f`.
+
+The prod overlay is in [docker-compose.prod.yml](../docker-compose.prod.yml):
 ```yaml
-# .github/workflows/deploy.yml
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository }}:latest
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /opt/agent-kanban
-            docker compose pull
-            docker compose up -d
-            docker image prune -f
+services:
+  web:
+    image: 406751652854.dkr.ecr.us-east-1.amazonaws.com/dwap/kanban:latest
+    restart: always
+    pull_policy: always
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "5" } }
 ```
+
+### Required GitHub secrets
+
+| Secret | Purpose |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | IAM user with ECR push + `GetAuthorizationToken` on `406751652854:repository/dwap/kanban` |
+| `AWS_SECRET_ACCESS_KEY` | Paired with the above |
+| `EC2_HOST` | EC2 public DNS/IP |
+| `EC2_USER` | SSH login user (e.g. `ubuntu`) |
+| `EC2_SSH_KEY` | Private key content (matching a pubkey in EC2's `~/.ssh/authorized_keys`) |
+| `ENV_CONTENTS` | Full contents of `.env.production` — materialized on the runner then scp'd to EC2 |
+
+Prefer GitHub OIDC + `AWS_ROLE_ARN` if you want to eliminate long-lived AWS keys later — swap the `configure-aws-credentials` step's inputs and update the workflow's `permissions` block with `id-token: write`.
+
+### EC2 prerequisites
+- Docker + Docker Compose v2 installed
+- `/opt/agent-kanban/` exists and is owned by `EC2_USER` (so scp + `docker compose` can write/run there)
+- Host nginx site + cert already configured (see section above) — the container listens on `127.0.0.1:3000`
+
+### Deploy log
+Tail on the box: `docker compose -f /opt/agent-kanban/docker-compose.yml -f /opt/agent-kanban/docker-compose.prod.yml logs -f web`. Or read the GitHub Actions run log for the build side.
 
 ## Environment variables
 See [.env.example](../.env.example) — in production, the minimum set is:
